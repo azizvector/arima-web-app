@@ -30,7 +30,7 @@ export const Header = (): React.ReactElement => {
   useEffect(() => {
     const token: any = Cookie.get('token')
     if (token) {
-      jwt.verify(token, "apriori", (err: any, decoded: any) => {
+      jwt.verify(token, "arima", (err: any, decoded: any) => {
         setUser(decoded)
       })
     }
@@ -45,7 +45,7 @@ export const Header = (): React.ReactElement => {
   }
 
   return (
-    <nav className="bg-[#274C77] fixed w-full z-20 top-0 left-0">
+    <nav className="bg-[#276c77] fixed w-full z-20 top-0 left-0">
       <div className="mx-auto max-w-7xl px-2">
         <div className="relative flex h-[4.5rem] items-center justify-between">
           <div className="flex flex-1 items-stretch justify-start">
@@ -58,20 +58,20 @@ export const Header = (): React.ReactElement => {
                 height={36}
               />
             </div>
-            <div className="block ml-14 mt-3">
+            <div className="block ml-14">
               <div className="flex space-x-4">
                 {navigation.map((item) => (
-                  <div key={item.label} className="relative flex">
+                  <div key={item.label} className="flex h-[4.5rem]">
                     <Link
                       href={item.href}
                       className={classNames(
-                        'text-center px-5 py-[1.125rem] font-semibold rounded-t-xl', {
+                        'flex items-center justify-center p-5 font-semibold', {
                         'text-white hover:text-[#D8E5F3]': path !== item.href,
-                        'bg-[#F2F3F7] text-[#274C77] before:absolute before:bottom-0 before:-left-5 before:bg-[#F2F3F7] before:w-5 before:h-5 after:absolute after:bottom-0 after:left-[100%] after:bg-[#F2F3F7] after:w-5 after:h-5': path === item.href,
+                        'bg-[#F2F3F7] text-[#274C77]': path === item.href,
                       })}
                     >
                       <div className={classNames({
-                        'before:absolute before:bottom-0 before:-left-9 before:bg-[#274C77] before:w-9 before:h-9 before:rounded-full before:z-[1] after:absolute after:bottom-0 after:left-[100%] after:bg-[#274C77] after:w-9 after:h-9 after:rounded-full after:z-[1]': path === item.href
+                        '': path === item.href
                       })}>
                         {item.label}
                       </div>

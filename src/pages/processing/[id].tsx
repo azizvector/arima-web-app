@@ -1,158 +1,260 @@
 import Layout from '@/layouts';
-import { Button, Table } from '@/components';
-import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import moment from 'moment';
-import { twoDecimalPlacesWithoutRound } from '@/functions';
-import { Tooltip } from 'react-tooltip';
-import classNames from 'classnames';
-import { Tab } from '@headlessui/react'
-import Apriori from '../../components/details/apriori'
-import FPGrowth from '../../components/details/fp-growth'
-import Compare from '../../components/details/compare'
+import React from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import { dropRight, fill, map, takeRight } from 'lodash';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+export const options = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top' as const,
+    },
+  },
+
+};
 
 export default function Dashboard() {
   const { query, push, back } = useRouter();
   const { id } = query;
 
-  const [datas, setDatas] = useState<any>({});
-
-  const tabs = useMemo(
-    () => {
-      let filteredTabs: any = []
-      const itemTabs: any = [
-        {
-          label: "Apriori",
-          page: <Apriori datas={datas.apriori} />
-        },
-        {
-          label: "FP-Growth",
-          page: <FPGrowth datas={datas.fp_growth} />
-        },
-        {
-          label: "Perbandingan",
-          page: <Compare datas={datas} />
-        }
-      ]
-
-      if (datas.apriori && datas.fp_growth) {
-        filteredTabs = itemTabs
-      } else {
-        if (datas.apriori) filteredTabs = itemTabs.filter((data: any) => data.label === "Apriori")
-        if (datas.fp_growth) filteredTabs = itemTabs.filter((data: any) => data.label === "FP-Growth")
-      }
-
-      return filteredTabs;
-    },
-    [datas]
-  );
+  const [summary, setSummary] = useState<any>({});
+  const [dataChart, setDataChart] = useState<any>({ labels: "", datasets: [] });
+  const [dataChartTest, setDataChartTest] = useState<any>({ labels: "", datasets: [] });
 
   useEffect(() => {
     const getSummaryDetails: any = async () => {
       try {
         const { data } = await axios.get(`/api/process/${id}`);
-        setDatas(data)
+
+        let length = data?.forecasts.length || 0
+        let timesteps = data?.summary?.timesteps || 0
+        let timestepsTest = (data?.summary?.timesteps || 0) + 5
+        let arrayNull = length - timesteps
+        let arrayNullTest = length - timestepsTest
+
+        setSummary(data.summary)
+        setDataChart({
+          labels: map(data.forecasts, (obj) => moment(obj.date).format("YYYY-MM-DD")),
+          datasets: [
+            {
+              label: 'Actual',
+              data: map(data.forecasts, 'actual'),
+              borderColor: 'rgb(255, 99, 132)',
+              backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            },
+            {
+              label: 'Forecast',
+              data: fill(Array(arrayNull), null).concat(takeRight(map(data.forecasts, 'prediction'), timesteps)),
+              borderColor: 'rgb(53, 162, 235)',
+              backgroundColor: 'rgba(53, 162, 235, 0.5)',
+            },
+          ],
+        })
+
+        setDataChartTest({
+          labels: dropRight(map(data.forecasts, (obj) => moment(obj.date).format("YYYY-MM-DD")), timesteps),
+          datasets: [
+            {
+              label: 'Actual',
+              data: dropRight(map(data.forecasts, 'actual'), timesteps + 5),
+              borderColor: 'rgb(255, 99, 132)',
+              backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            },
+            {
+              label: 'True Value',
+              data: fill(Array(arrayNullTest), null).concat(takeRight(dropRight(map(data.forecasts, 'actual'), timesteps), 5)),
+              borderColor: 'rgb(255, 99, 132)',
+              backgroundColor: 'rgba(255, 99, 132, 0.5)',
+              borderDash: [5, 5],
+            },
+            {
+              label: 'Forecast',
+              data: dropRight(map(data.forecasts, 'prediction'), 5),
+              borderColor: 'rgb(53, 162, 235)',
+              backgroundColor: 'rgba(53, 162, 235, 0.5)',
+            },
+          ],
+        })
       } catch (error: any) {
-        console.error(error.response.data.message);
+        console.log('error: ', error);
       }
     }
-    if (id) getSummaryDetails();
+    getSummaryDetails();
   }, [id]);
 
   const handleDelete = async () => {
     try {
       await axios.delete(`/api/process/${id}`);
-      push("/");
+      push("/processing");
     } catch (error: any) {
-      console.error(error.response.data.message);
+      console.log('error: ', error);
     }
   };
 
-  console.log("tabs.length", tabs.length);
-  
   return (
     <div className="grid gap-11">
-      <Tab.Group>
-        <div className="flex items-center justify-between gap-4">
-          <Tab.List className={classNames(
-            'flex', {
-            'bg-white rounded-xl': tabs.length === 3,
-          })}>
-            {tabs.length === 3 ? <>{
-              tabs.map((tab: any) => (
-                <Tab
-                  key={tab.label}
-                  className={({ selected }) =>
-                    classNames(
-                      'w-64 font-semibold uppercase px-6 py-4 rounded-xl focus:outline-none', {
-                      'text-[#274C77] bg-[#D8E5F3]': selected,
-                      'text-[#464E5F] hover:text-[#274C77]': !selected
-                    })
-                  }
-                >
-                  {tab.label}
-                </Tab>
-              ))}</> : <>{
-                tabs.map((tab: any) => (
-                  <Tab
-                    key={tab.label}
-                    className={({ selected }) =>
-                      classNames(
-                        'text-3xl font-semibold uppercase pointer-events-none focus:outline-none', {
-                        'text-[#464E5F]': selected,
-                      })
-                    }
-                  >
-                    {tab.label}
-                  </Tab>
-                ))
-              }</>
-            }
-          </Tab.List>
-          <div className="flex items-center justify-between gap-4 ml-4">
-            <Button
-              title="Kembali"
-              color="secondary"
-              onClick={() => back()}
-            />
-            <Button
-              title="Hapus"
-              color="danger"
-              onClick={handleDelete}
-            />
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="text-3xl text-[#464E5F] font-semibold uppercase">
+          Detail ARIMA
+        </h3>
+        <div className="flex items-center justify-between gap-4 ml-4">
+          <Button
+            title="Kembali"
+            color="secondary"
+            onClick={() => back()}
+          />
+          <Button
+            title="Hapus"
+            color="danger"
+            onClick={handleDelete}
+          />
+        </div>
+      </div>
+      <div className="grid gap-11">
+        <div className="col-span-1">
+          <div className="text-[#464E5F] bg-gray-50 py-9 px-8 rounded-xl space-y-3">
+            <span className="text-lg font-semibold">Catatan!</span>
+            <div className="space-y-1.5">
+              <span className="font-medium">Root Mean Square Error (RMSE)</span>
+              <div>RMSE digunakan untuk mengukur seberapa baik model ARIMA memprediksi data deret waktu. Semakin kecil RMSE, semakin baik model memprediksi data.</div>
+            </div>
+            <div className="space-y-1.5">
+              <span className="font-medium">Mean Absolute Percentage Error (MAPE)</span>
+              <div>MAPE mengukur kesalahan relatif dari model ARIMA dalam memprediksi data deret waktu. MAPE dinyatakan sebagai persentase dari rata-rata nilai aktual. Semakin kecil nilai MAPE, semakin baik model memprediksi data.</div>
+            </div>
           </div>
         </div>
-        {/* <div className="grid grid-cols-1 gap-11">
-          <div className="col-span-1">
-            <div className="text-[#464E5F] bg-gray-50 py-9 px-8 rounded-xl space-y-3">
-              <span className="text-lg font-semibold">Catatan!</span>
-              <div className="space-y-1.5">
-                <span className="font-medium">Positive Correlation</span>
-                <div>Jika lift ratio lebih besar dari 1, itu menunjukkan bahwa hubungan antara item atau variabel yang dianalisis lebih sering terjadi daripada kejadian acak secara umum. Menunjukkan bahwa ada keterkaitan yang positif dan signifikan antara item-item tersebut.</div>
-              </div>
-              <div className="space-y-1.5">
-                <span className="font-medium">Negative Correlation</span>
-                <div>Jika lift ratio kurang dari 1, itu menunjukkan bahwa hubungan antara item atau variabel yang dianalisis kurang sering terjadi dibandingkan dengan kejadian acak secara umum. Menunjukkan bahwa ada keterkaitan yang negatif atau tidak signifikan antara item-item tersebut.</div>
-              </div>
-              <div className="space-y-1.5">
-                <span className="font-medium">Independent Correlation</span>
-                <div>Jika lift ratio sama dengan 1, itu menunjukkan bahwa hubungan antara item atau variabel yang dianalisis memiliki tingkat kejadian yang sama dengan kejadian acak secara umum. Menunjukkan bahwa tidak ada hubungan khusus antara item-item tersebut.</div>
+        <div className="col-span-1">
+          <div className="bg-white py-9 px-8 rounded-xl shadow-[0px_0px_20px_rgba(56,71,109,0.03)]">
+            <div className="flex flex-col items-start justify-between gap-4">
+              <h3 className="mb-6 text-xl text-[#464E5F] font-semibold uppercase">
+                Information
+              </h3>
+              <div className="grid grid-cols-3 gap-11 w-full">
+                <div className="col-span-1 flex flex-col items-start gap-4">
+                  <div className="space-y-1">
+                    <div className="text-gray-400">
+                      Tanggal Proses
+                    </div>
+                    <div className="text-lg text-gray-500 font-semibold">
+                      {moment(summary?.processed_date).format('DD-MM-yyyy')}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-gray-400">
+                      Total Data
+                    </div>
+                    <div className="text-lg text-gray-500 font-semibold">
+                      {summary?.total_order}
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-1 flex flex-col items-start gap-4">
+                  <div className="space-y-1">
+                    <div className="text-gray-400">
+                      P
+                    </div>
+                    <div className="text-lg text-gray-500 font-semibold">
+                      {summary?.p}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-gray-400">
+                      D
+                    </div>
+                    <div className="text-lg text-gray-500 font-semibold">
+                      {summary?.d}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-gray-400">
+                      Q
+                    </div>
+                    <div className="text-lg text-gray-500 font-semibold">
+                      {summary?.q}
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-1 flex flex-col items-start gap-4">
+                  <div className="space-y-1">
+                    <div className="text-gray-400">
+                      Timesteps
+                    </div>
+                    <div className="text-lg text-gray-500 font-semibold">
+                      {summary?.timesteps}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-gray-400">
+                      RMSE
+                    </div>
+                    <div className="text-lg text-gray-500 font-semibold">
+                      {summary?.rmse}%
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-gray-400">
+                      Mape
+                    </div>
+                    <div className="text-lg text-gray-500 font-semibold">
+                      {summary?.mape}%
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div> */}
-        <Tab.Panels>
-          {tabs.map((tab: any, idx: number) => (
-            <Tab.Panel
-              key={idx}
-              className="grid gap-11"
-            >
-              {tab.page}
-            </Tab.Panel>
-          ))}
-        </Tab.Panels>
-      </Tab.Group>
+        </div>
+        <div className="col-span-1">
+          <div className="h-full bg-white py-9 px-8 rounded-xl shadow-[0px_0px_20px_rgba(56,71,109,0.03)]">
+            <div className="flex flex-col">
+              <h3 className="mb-6 text-xl text-[#464E5F] font-semibold uppercase">
+                {summary?.timesteps} steps forecast
+              </h3>
+            </div>
+            <div className="flex flex-col">
+              <Line options={options} data={dataChart} />
+            </div>
+          </div>
+        </div>
+        <div className="col-span-1">
+          <div className="h-full bg-white py-9 px-8 rounded-xl shadow-[0px_0px_20px_rgba(56,71,109,0.03)]">
+            <div className="flex flex-col">
+              <h3 className="mb-6 text-xl text-[#464E5F] font-semibold uppercase">
+                5 steps test
+              </h3>
+            </div>
+            <div className="flex flex-col">
+              <Line options={options} data={dataChartTest} />
+            </div>
+          </div>
+        </div>
+      </div>
     </div >
   );
 }

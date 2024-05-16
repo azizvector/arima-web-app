@@ -6,7 +6,7 @@ const pool: any = mysql({
     user: "root",
     password: "password",
     port: 3306,
-    database: "apriori_db",
+    database: "arima_db",
   },
 });
 

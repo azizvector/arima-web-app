@@ -1,19 +1,13 @@
 import classNames from 'classnames';
 import { Fragment } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import {
-  ChevronDownIcon,
-
-} from '@heroicons/react/24/solid'
 
 interface IDropdown {
   onDeleteAll: () => void;
-  onDelete: () => void;
 }
 
 export function Dropdown({
   onDeleteAll,
-  onDelete,
 }: IDropdown): React.ReactElement {
   return (
     <Menu as="div" className="relative inline-block text-left">
@@ -33,13 +27,6 @@ export function Dropdown({
         leaveTo="transform opacity-0 scale-95"
       >
         <Menu.Items className="absolute right-0 z-10 mt-2 w-60 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-          <Menu.Item>
-            {({ active }) => (
-              <div onClick={onDelete} className={classNames(active ? 'bg-gray-100' : '', 'block cursor-pointer px-4 py-2 text-sm text-gray-700')}>
-                Hapus Berdasarkan Tanggal
-              </div>
-            )}
-          </Menu.Item>
           <Menu.Item>
             {({ active }) => (
               <div onClick={onDeleteAll} className={classNames(active ? 'bg-gray-100' : '', 'block cursor-pointer px-4 py-2 text-sm text-gray-700')}>

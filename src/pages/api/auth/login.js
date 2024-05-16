@@ -22,7 +22,7 @@ const login = async (req, res) => {
       id: checkUser[0].user_id,
       username: checkUser[0].username,
       name: checkUser[0].name
-    }, "apriori", {
+    }, "arima", {
       expiresIn: '7d'
     })
     return res.status(200).json(token);

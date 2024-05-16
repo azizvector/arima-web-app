@@ -61,21 +61,21 @@ export default function Dashboard() {
           </div>
           <div className="bg-white py-9 px-8 rounded-xl shadow-[0px_0px_20px_rgba(56,71,109,0.03)]">
             <h3 className="mb-6 text-3xl text-[#464E5F] font-semibold uppercase">
-              Apriori & FP-Growth
+              ARIMA
             </h3>
             <div className="mb-6 text-gray-400">
-              Metode data mining untuk mencari frekuensi hubungan atau pola hubungan antar atribut dalam dataset
+              ARIMA (Autoregressive Integrated Moving Average) adalah sebuah model statistik yang digunakan untuk menganalisis dan meramalkan data deret waktu.
             </div>
-            <div className="px-10">
+            <div className="flex justify-center py-10">
               <Image
                 className="h-9 w-9"
-                src="/apriori.png"
-                alt="Apriori"
+                src="/arima.svg"
+                alt="Arima"
                 width={0}
                 height={0}
                 sizes="100vw"
                 style={{
-                  width: '100%',
+                  width: '50%',
                   height: 'auto',
                 }}
               />
@@ -87,47 +87,41 @@ export default function Dashboard() {
         <div className="grid gap-11">
           <div className="bg-white py-9 px-8 rounded-xl shadow-[0px_0px_20px_rgba(56,71,109,0.03)]">
             <h3 className="mb-6 text-xl text-[#464E5F] font-semibold uppercase">
-              Apriori & FP-Growth
+              Tujuan ARIMA
             </h3>
             <ul className="ml-5 max-w-md space-y-1 text-gray-400 list-disc list-outside">
               <li>
-                Market basket Analysis (Menganalisa kebiasaan customer dalam memilih item pembelian)
+                Peramalan jangka pendek
               </li>
               <li>
-                Sistem Rekomendasi
+                Menentukan hubungan statistik yang baik antar variabel yang diramal dengan nilai historis variabel
               </li>
               <li>
-                Menyediakan stok
-              </li>
-              <li>
-                Pemberian diskon
-              </li>
-              <li>
-                Sistem bundling
+                Menemukan pola dalam time yang digunakan dalam peramalan
               </li>
             </ul>
           </div>
           <div className="bg-white py-9 px-8 rounded-xl shadow-[0px_0px_20px_rgba(56,71,109,0.03)]">
             <h3 className="mb-6 text-xl text-[#464E5F] font-semibold uppercase">
-              Indikator Algoritma Apriori & FP-Growth
+              Parameter ARIMA
             </h3>
             <div className="mb-1.5 text-lg text-gray-500 font-semibold">
-              Support (Penunjang)
+              Parameter P
             </div>
             <div className="mb-6 text-gray-400">
-              adalah persentase kombinasi item
+              Mengacu pada jumlah lag dalam model autoregressive,
             </div>
             <div className="mb-1.5 text-lg text-gray-500 font-semibold">
-              Confidence (Kepastian)
+              Parameter D
             </div>
             <div className="mb-6 text-gray-400">
-              adalah kuatnya hubungan item antar item dalam aturan assosiatif
+              Mengacu pada jumlah differencing yang diterapkan pada data,
             </div>
             <div className="mb-1.5 text-lg text-gray-500 font-semibold">
-              Lift Ratio
+              Parameter Q
             </div>
             <div className="text-gray-400">
-              adalah untuk cek apakah rule tersebut valid
+              Mengacu pada jumlah lag dalam model moving average.
             </div>
           </div>
         </div>

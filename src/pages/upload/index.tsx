@@ -1,14 +1,10 @@
-import { Button, UploadFile, Table, Modal, Date, Input, Dropdown } from '@/components';
+import { Button, UploadFile, Table, Dropdown } from '@/components';
 import { useEffect, useState } from 'react';
 import { isEmpty, some } from 'lodash';
-import { Tooltip } from 'react-tooltip';
-import { useForm } from "react-hook-form";
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as XLSX from 'xlsx';
 import Layout from '@/layouts';
 import axios from 'axios';
 import moment from 'moment';
-import * as yup from "yup";
+import * as XLSX from 'xlsx';
 
 const excelType = [
   "application/vnd.ms-excel",
@@ -22,64 +18,13 @@ const excelType = [
   "application/vnd.ms-excel.sheet.binary.macroEnabled.12"
 ]
 
-type FormData = yup.InferType<typeof schema>;
-const schema = yup.object({
-  start_date: yup.date().required("Tanggal Awal harus diisi").nullable(),
-  end_date: yup.date().required("Tanggal Akhir harus diisi").nullable(),
-  total_record: yup.number(),
-}).required();
-
 export default function Upload() {
   const [datas, setDatas] = useState<any[]>([]);
   const [files, setFiles] = useState<any>(null);
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingTable, setLoadingTable] = useState<boolean>(true);
   const [error, setError] = useState<string>('')
-  const [count, setCount] = useState<any>(0);
-  const { control, register, reset, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: yupResolver(schema)
-  });
 
-  useEffect(() => {
-    const start_date = watch("start_date");
-    const end_date = watch("end_date");
-    getTotalTransaction(start_date, end_date);
-  }, [watch("start_date"), watch("end_date")]);
-
-  const onDelete = async (fields: FormData) => {
-    const startDate = fields.start_date ? moment(fields.start_date).toDate() : null
-    const endDate = fields.end_date ? moment(fields.end_date).toDate() : null
-
-    try {
-      await axios.delete("/api/transaction", {
-        params: {
-          start_date: startDate ? moment(startDate).format('yyyy-MM-DD') : moment().format('yyyy-MM-DD'),
-          end_date: endDate ? moment(endDate).format('yyyy-MM-DD') : moment().format('yyyy-MM-DD')
-        }
-      })
-      await getTransaction();
-      await setModalOpen(false);
-    } catch (error: any) {
-    
-    }
-  };
-
-  const getTotalTransaction = async (start_date: Date | null | undefined, end_date: Date | null | undefined) => {
-    const startDate = start_date ? moment(start_date).toDate() : null
-    const endDate = end_date ? moment(end_date).toDate() : null
-    try {
-      const { data } = await axios.get("/api/count/transaction", {
-        params: {
-          start_date: startDate ? moment(startDate).format('yyyy-MM-DD') : moment().format('yyyy-MM-DD'),
-          end_date: endDate ? moment(endDate).format('yyyy-MM-DD') : moment().format('yyyy-MM-DD')
-        }
-      });
-      setCount(data.count)
-    } catch (error: any) {
-      console.error(error.response.data.message);
-    }
-  }
   const header = [
     {
       fieldId: 'index',
@@ -89,7 +34,7 @@ export default function Upload() {
     {
       fieldId: 'order_id',
       label: 'ID Transaksi',
-      width: 120
+      width: 180
     },
     {
       fieldId: 'order_date',
@@ -100,18 +45,9 @@ export default function Upload() {
       width: 158
     },
     {
-      fieldId: 'products',
-      label: 'Produk',
-      renderItem: (products: string, index: number) => (<>
-        <Tooltip
-          id={`${index}-tooltip`}
-          content={`${products}`}
-          place={"top"}
-        />
-        <div data-tooltip-id={`${index}-tooltip`} className="truncate w-[310px] text-left hover:cursor-pointer">
-          {products}
-        </div>
-      </>)
+      fieldId: 'quantity',
+      label: 'Kuantitas',
+      width: 120
     },
   ];
 
@@ -139,7 +75,7 @@ export default function Upload() {
     setFiles(event.target.files[0])
   };
 
-  const handleRemoveFIle = () => {
+  const handleRemoveFile = () => {
     const file: any = document.querySelector('#file-upload')
     file.value = null
     setError("")
@@ -161,7 +97,7 @@ export default function Upload() {
         first_sheet_name = workbook.SheetNames[0],
         worksheet = workbook.Sheets[first_sheet_name],
         data = XLSX.utils.sheet_to_json(worksheet, { raw: false }),
-        dataset = data.map((o: any) => [o.order_id, o.date, o.products])
+        dataset = data.map((o: any) => [o.order_id, o.date, o.quantity])
       onSave(dataset)
     }
     reader.readAsArrayBuffer(files);
@@ -171,13 +107,11 @@ export default function Upload() {
     if (!isEmpty(dataset)) {
       try {
         await axios.post("/api/upload", dataset)
-        await handleRemoveFIle()
+        await handleRemoveFile()
         await getTransaction()
         setLoading(false)
       } catch (error: any) {
         setLoading(false)
-        console.log("setLoading", );
-        
         setError(`ID Transaksi ${error.response.data.message.split("'")[1]} sudah ada!`);
       }
     }
@@ -193,15 +127,6 @@ export default function Upload() {
       setError(error.response.data.message);
       setLoading(false)
     }
-  };
-
-  const showModal = () => {
-    setModalOpen(true);
-    reset()
-  };
-
-  const handleCancel = () => {
-    setModalOpen(false);
   };
 
   return (
@@ -224,7 +149,7 @@ export default function Upload() {
                 <div className="text-sm font-medium">
                   {files?.name}
                 </div>
-                <button onClick={handleRemoveFIle} type="button" className="ml-auto -mx-1.5 -my-1.5 bg-blue-50 text-blue-500 rounded-md focus:outline-none p-1.5 inline-flex h-8 w-8">
+                <button onClick={handleRemoveFile} type="button" className="ml-auto -mx-1.5 -my-1.5 bg-blue-50 text-blue-500 rounded-md focus:outline-none p-1.5 inline-flex h-8 w-8">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
                   </svg>
@@ -249,10 +174,7 @@ export default function Upload() {
                   Transaksi
                 </h3>
                 {!isEmpty(datas) && <div className="flex items-center justify-between gap-4 ml-4">
-                  <Dropdown 
-                    onDelete={showModal}
-                    onDeleteAll={onDeleteAll}
-                  />
+                  <Dropdown onDeleteAll={onDeleteAll} />
                 </div>}
               </div>
               <p className="text-gray-400">
@@ -271,50 +193,6 @@ export default function Upload() {
           </div>
         </div>
       </div>
-      <Modal open={modalOpen} onCancel={handleCancel}>
-        <form className="space-y-6" onSubmit={handleSubmit(onDelete)} autoComplete="off">
-          <Date
-            label="Tanggal Mulai"
-            placeholder="Tanggal Mulai"
-            dateFormat="DD-MM-yyyy"
-            timeFormat={false}
-            name="start_date"
-            control={control}
-            error={errors.start_date?.message}
-          />
-          <Date
-            label="Tanggal Akhir"
-            placeholder="Tanggal Akhir"
-            dateFormat="DD-MM-yyyy"
-            timeFormat={false}
-            name="end_date"
-            control={control}
-            error={errors.end_date?.message}
-          />
-          <Input
-            label="Total Data"
-            name='total_record'
-            register={register}
-            value={count}
-            disabled={true}
-          />
-          <div className="flex gap-4 pt-4">
-            <Button
-              type="button"
-              title="Batal"
-              color="secondary"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            />
-            <Button
-              type="submit"
-              title="Hapus"
-              color="danger"
-              loading={isSubmitting}
-            />
-          </div>
-        </form>
-      </Modal>
     </>
   );
 }

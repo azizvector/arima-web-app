@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Input, Button } from '@/components';
 import * as yup from "yup";
-import Image from 'next/image';
 import Cookie from 'js-cookie'
 import axios from "axios";
 
@@ -42,37 +41,13 @@ export default function Login() {
   return (
     <div className="min-h-full h-[100vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-md">
-        <div className="absolute z-10 left-6 bottom-2 flex items-center pointer-events-none">
-          <Image
-            src="/logistic.png"
-            alt="Logistic"
-            width={300}
-            height={300}
-          />
-        </div>
-        <div className="absolute z-10 right-6 bottom-2 flex items-center pointer-events-none">
-          <Image
-            src="/store.png"
-            alt="Store"
-            width={300}
-            height={300}
-          />
-        </div>
-        <div className="absolute left-12 bottom-0 flex items-center justify-center pointer-events-none">
-          <Image
-            src="/bg.svg"
-            alt="Bg"
-            width={1000}
-            height={1000}
-          />
-        </div>
         <div className="relative z-10 mt-5 bg-white py-14 px-14 rounded-xl shadow-[0px_0px_20px_rgba(56,71,109,0.03)]">
           <div className="mb-10 flex flex-col items-center justify-between gap-2">
             <h3 className="text-xl text-[#464E5F] font-semibold uppercase">
               Login Akun
             </h3>
             <p className="text-sm text-gray-400">
-              Aplikasi Algoritma Apriori
+              Aplikasi ARIMA
             </p>
           </div>
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>

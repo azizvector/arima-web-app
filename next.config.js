@@ -1,8 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  webpack: (webpackConfig, { webpack }) => {
-    webpackConfig.plugins.push(
+  resolve: {
+    fallback: {
+      fs: false // This line is added to handle 'fs' module for browser
+    }
+  },
+  webpack5: true,
+  webpack: (config, { webpack }) => {
+    config.resolve.fallback = { fs: false };
+
+    config.plugins.push(
       // Remove node: from import specifiers, because Next.js does not yet support node: scheme
       // https://github.com/vercel/next.js/issues/28774
       new webpack.NormalModuleReplacementPlugin(
@@ -13,7 +21,7 @@ const nextConfig = {
       ),
     );
 
-    return webpackConfig;
+    return config;
   },
 }
 
